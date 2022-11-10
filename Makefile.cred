@@ -1,0 +1,22 @@
+# verify we are not loosing any attestation information
+# (cat attestation.yaml | yq -o json |  jq -r '.attestation|to_entries|.[].value|["0000",length/2,.] | @tsv' |while read t l v; do echo -n $t; printf " %04x " $l; echo $v; done; echo 0000 0000 0000 0000) | xxd -r -p | cmp - attestation.bin
+
+# for use with fido2-cred
+cred: authData.yaml challengefile
+        # client data hash (base64 blob)
+        cat challengefile | openssl sha256 | base64 > cred
+        # relying party id (UTF-8 string)
+        echo ${APPLICATION} >> cred
+        # credential format (UTF-8 string)
+        echo packed >> cred
+        # authenticator data (base64 blob)
+        cat attestation.yaml | yq .attestation.authData | xxd -r -p | base64 >> cred
+        # credential id (base64 blob)
+        cat authData.yaml | yq .authdata.attestedCredentialData.credentialId | xxd -r -p | base64 >>cred
+        # attestation signature (base64 blob)
+        cat attestation.yaml | yq .attestation.signature | xxd -r -p | base64 >>cred
+        # attestation certificate, if present (base64 blob)
+        cat attestation.yaml | yq .attestation.certificate | xxd -r -p | base64 >>cred
+        echo verifying:
+        cat cred | fido2-cred -V -d
+
