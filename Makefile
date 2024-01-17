@@ -33,7 +33,7 @@ sk sk.pub attestation.bin: challengefile
 
 # some random challenge data to hash
 challengefile:
-	openssl rand 128 -out challengefile
+	openssl rand -out challengefile 128
 
 ###
 ### parse attestation
