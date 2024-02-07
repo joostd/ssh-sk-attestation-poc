@@ -260,11 +260,11 @@ except FileNotFoundError:
 try:
     attestation_certificate = attestation['certificate']
     # validate attestation certificate using registered root certificates
-    if metadata_entry:
-        issuers = [ x509.load_der_x509_certificate(cert, default_backend()) for cert in metadata_entry.metadata_statement.attestation_root_certificates ]
-    elif issuer != None:
+    if issuer != None:	# use explicitly trusted certificate
         issuers = [issuer]
-    else:
+    elif metadata_entry:	# use roots from MDS
+        issuers = [ x509.load_der_x509_certificate(cert, default_backend()) for cert in metadata_entry.metadata_statement.attestation_root_certificates ]
+    else:	# no issuers, fail
         issuers = []
     trusted = False
     for cert in issuers:
